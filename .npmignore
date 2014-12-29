@@ -1,0 +1,7 @@
+demo/
+tmp/
+node_modules/
+github-token.js
+data/
+commit.json
+config.json

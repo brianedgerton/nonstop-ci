@@ -1,0 +1,57 @@
+{
+  "name": "nonstop-ci",
+  "version": "0.0.1",
+  "description": "A gulp-based, simplistic CI solution for creating nonstop bundles from github repositories",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "gulp test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/LeanKit-Labs/nonstop-ci"
+  },
+  "keywords": [
+    "nonstop",
+    "ci"
+  ],
+  "author": "Alex Robson",
+  "license": "MIT License - http://opensource.org/licenses/MIT",
+  "bugs": {
+    "url": "https://github.com/LeanKit-Labs/nonstop-ci/issues"
+  },
+  "homepage": "https://github.com/LeanKit-Labs/nonstop-ci",
+  "dependencies": {
+    "autohost": "^0.3.0-14",
+    "autohost-nedb-auth": "0.1.0-5",
+    "bunyan": "1.2.x",
+    "commander": "^2.5.1",
+    "configya": "0.2.0",
+    "daedalus": "~0.3.2",
+    "debug": "^2.1.0",
+    "fount": "~0.0.6",
+    "github": "^0.2.3",
+    "inquirer": "~0.8.0",
+    "lodash": "~2.4.1",
+    "machina": "^0.4.0-2",
+    "fs-extra": "^0.13.0",
+    "moment": "^2.8.4",
+    "nedb": "^1.0.0",
+    "ngrok": "~0.1.98",
+    "node-uuid": "^1.4.2",
+    "postal": "~0.12.3",
+    "request": "^2.51.0",
+    "when": "^3.6.4"
+  },
+  "devDependencies": {
+    "gulp": "~3.8.10",
+    "should": "~4.4.1",
+    "gulp-mocha": "^2.0.0",
+    "istanbul": "^0.3.5",
+    "gulp-istanbul": "0.5.0",
+    "open": "0.0.5",
+    "gulp-jshint": "1.9.x",
+    "jshint-stylish": "1.0.x",
+    "gulp-watch": "3.0.x",
+    "sinon": "1.11.x"
+  }
+}

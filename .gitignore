@@ -1,0 +1,9 @@
+node_modules/
+.idea/
+.DS_Store
+*npm-debug.log
+github-token.js
+commit.json
+config.json
+data/
+coverage/
