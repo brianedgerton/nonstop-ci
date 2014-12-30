@@ -7,3 +7,4 @@ commit.json
 config.json
 data/
 coverage/
+api-token.json

@@ -265,53 +265,92 @@ describe( "Boot FSM", function() {
 	} );
 
 	describe( "when creating a token", function() {
-		it( "should pass the credentials to the github api", function( done ) {
-			var creds = { user: "myuser", password: "mypass" };
-			var tokenPrompt = sinon.stub( deps.prompt, "token" ).callsArgWith( 0, creds );
-			var createToken = sinon.stub( deps.api, "createToken" ).callsArgWith( 1, null, "sometoken" );
+		describe( "when only basic authentication is needed", function() {
+			it( "should pass the credentials to the github api", function( done ) {
+				var creds = { user: "myuser", password: "mypass" };
+				var tokenPrompt = sinon.stub( deps.prompt, "token" ).callsArgWith( 0, creds );
+				var createToken = sinon.stub( deps.api, "createToken" ).callsArgWith( 2, null, "sometoken" );
 
-			var cfg = createConfig( {
-				prompt: deps.prompt,
-				api: deps.api
+				var cfg = createConfig( {
+					prompt: deps.prompt,
+					api: deps.api
+				} );
+
+				var app = getApp( cfg );
+
+				app.transitionForReal( "createToken" );
+
+				_.defer( function() {
+					createToken.getCall( 0 ).args[ 0 ].should.equal( "myuser" );
+					tokenPrompt.restore();
+					createToken.restore();
+					app.transition.lastCall.args[ 0 ].should.equal( "prompt" );
+					done();
+				} );
 			} );
 
-			var app = getApp( cfg );
+			it( "should fail if an error happens", function( done ) {
+				var creds = { user: "myuser", password: "mypass" };
+				var tokenPrompt = sinon.stub( deps.prompt, "token" ).callsArgWith( 0, creds );
+				var createToken = sinon.stub( deps.api, "createToken" ).callsArgWith( 2, new Error( "Uh oh" ) );
 
-			app.transitionForReal( "createToken" );
+				var cfg = createConfig( {
+					prompt: deps.prompt,
+					api: deps.api
+				} );
 
-			_.defer( function() {
-				createToken.getCall( 0 ).args[ 0 ].should.equal( "myuser" );
-				tokenPrompt.restore();
-				createToken.restore();
-				app.transition.lastCall.args[ 0 ].should.equal( "prompt" );
-				done();
+				var app = getApp( cfg );
+
+				var fail = sinon.spy( app.states.createToken, "token.failed" );
+
+				app.transitionForReal( "createToken" );
+
+				_.defer( function() {
+					fail.called.should.be.ok;
+					tokenPrompt.restore();
+					createToken.restore();
+					app.transition.lastCall.args[ 0 ].should.equal( "prompt" );
+					done();
+				} );
 			} );
 		} );
 
-		it( "should fail if an error happens", function( done ) {
-			var creds = { user: "myuser", password: "mypass" };
-			var tokenPrompt = sinon.stub( deps.prompt, "token" ).callsArgWith( 0, creds );
-			var createToken = sinon.stub( deps.api, "createToken" ).callsArgWith( 1, new Error( "Uh oh" ) );
+		describe( "when two-factor authentication is necessary", function() {
+			it( "should prompt for the auth code", function( done ) {
+				var creds = { user: "myuser", password: "mypass" };
+				var tokenResult = { token: "someauthtoken" };
+				var tokenPrompt = sinon.stub( deps.prompt, "token" ).callsArgWith( 0, creds );
+				var twoFactorPrompt = sinon.stub( deps.prompt, "twoFactor" ).callsArgWith( 0, tokenResult );
+				var e = new Error( "2 Factor" );
+				e.code = 401;
+				var createToken = sinon.stub( deps.api, "createToken" );
 
-			var cfg = createConfig( {
-				prompt: deps.prompt,
-				api: deps.api
-			} );
+				createToken.withArgs( creds.user, {} ).callsArgWith( 2, e );
+				createToken.withArgs( creds.user, { twoFactorToken: tokenResult.token } ).callsArgWith( 2, null, "someauthtoken" );
 
-			var app = getApp( cfg );
 
-			var fail = sinon.spy( app.states.createToken, "token.failed" );
+				var cfg = createConfig( {
+					prompt: deps.prompt,
+					api: deps.api
+				} );
 
-			app.transitionForReal( "createToken" );
+				var app = getApp( cfg );
 
-			_.defer( function() {
-				fail.called.should.be.ok;
-				tokenPrompt.restore();
-				createToken.restore();
-				app.transition.lastCall.args[ 0 ].should.equal( "prompt" );
-				done();
+				app.transitionForReal( "createToken" );
+
+				_.defer( function() {
+					var args = createToken.lastCall.args;
+					args[ 0 ].should.equal( "myuser" );
+					args[ 1 ].should.eql( { twoFactorToken: tokenResult.token } );
+					twoFactorPrompt.restore();
+					tokenPrompt.restore();
+					createToken.restore();
+					app.transition.lastCall.args[ 0 ].should.equal( "prompt" );
+					done();
+				} );
 			} );
 		} );
 	} );
+
 
 } );

@@ -107,9 +107,26 @@ module.exports = function( deps ) {
 				_onEnter: function() {
 					prompt.token( this.raiseResult( "prompt" ) );
 				},
-				"prompt.done": function( credentials ) {
+				"prompt.done": function( credentials, twoFactorResult ) {
+					var options = {};
+					if ( twoFactorResult ) {
+						options.twoFactorToken = twoFactorResult.token;
+					}
+
 					api.authenticateBasic( credentials );
-					api.createToken( credentials.user, this.raiseAny( "token" ) );
+					api.createToken( credentials.user, options, function( err, token ) {
+						if ( !err ) {
+							return this.handle( "token.done" );
+						}
+
+						if ( err.code === 401 ) {
+							return prompt.twoFactor( function( result ) {
+								this.handle( "prompt.done", credentials, result );
+							}.bind( this ) );
+						}
+
+						return this.handle( "token.failed", err );
+					}.bind( this ) );
 				},
 				"token.done": function( token ) {
 					this.transition( "prompt" );

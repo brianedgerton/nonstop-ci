@@ -66,16 +66,34 @@ function createHook( org, repository ) {
 		} );
 }
 
-function createToken( user, cb ) {
+function createToken( user, options, cb ) {
+
+	if ( _.isFunction( options ) ) {
+		_cb = options;
+		_options = {};
+	} else {
+		_options = options;
+		_cb = cb;
+	}
+
 	var request = {
 		scopes: [ "repo" ],
 		note: "Token obtained by nonstop on " + moment( Date.now() ).toLocaleString()
 	};
+
+	if ( _options.twoFactorToken ) {
+		request.headers = request.headers || {};
+		request.headers[ "X-GitHub-OTP" ] = _options.twoFactorToken;
+	}
+
 	github.authorization.create( request, function( err, doc ) {
 		if ( !err ) {
 			tokenApi.write( doc.id, user, doc.token );
 		}
-		cb( err, doc );
+
+		console.log( err );
+
+		_cb( err, doc );
 	} );
 }
 
