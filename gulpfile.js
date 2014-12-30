@@ -1,3 +1,4 @@
+var processhost = require( "processhost" )();
 var gulp = require( "gulp" );
 var mocha = require( "gulp-mocha" );
 var istanbul = require( "gulp-istanbul" );
@@ -10,6 +11,9 @@ gulp.task( "test", function( done ) {
 		.pipe( mocha( {
 			reporter: "spec"
 		} ) )
+		.on( "error", function( err ) {
+			console.log( err.stack );
+		} )
 		.on( "end", function() {
 			// setTimeout( function() {
 			// 	console.log( process._getActiveRequests() );
@@ -22,7 +26,6 @@ gulp.task( "test", function( done ) {
 gulp.task( "watch", [ "test" ], function() {
 	gulp.watch( [ testFiles, "./src/**" ], [ "test" ] );
 } );
-
 
 gulp.task( "coverage", function( cb ) {
 	gulp.src( [ "./src/**/*.js" ] )
@@ -43,4 +46,13 @@ gulp.task( "lint", function() {
 	return gulp.src( [ "./src/**/*.js", "./spec/**/*.js" ] )
 		.pipe( jshint() )
 		.pipe( jshint.reporter( "jshint-stylish" ) );
+} );
+
+gulp.task( "start", function() {
+	processhost.start( "server", {
+		command: "node",
+		args: [ "./src/index.js" ],
+		stdio: "inherit",
+		restart: true
+	} );
 } );
