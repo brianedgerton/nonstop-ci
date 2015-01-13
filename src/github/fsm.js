@@ -1,13 +1,16 @@
+var config = require( "../config.js" );
 var postal = require( "postal" );
 var channel = postal.channel( "github" );
 var _ = require( "lodash" );
 var machina = require( "machina" );
-var api = require( "./api.js" );
+var api = require( "./api.js" )( config );
 var store = require( "./store.js" );
 var repository = require( "./repository" );
-var debug = require( "debug" )( "strapping:fsm" );
-var config = require( "../config.js" );
+var debug = require( "debug" )( "nonstop:fsm" );
+
 var repositories = require( "./commands/getRepositories.js" )( api, store );
+
+var ignoredOrgs = ( config.ignored && config.ignored.organizations ) || [];
 
 var Machine = machina.Fsm.extend( {
 	organizations: {},
@@ -46,7 +49,7 @@ var Machine = machina.Fsm.extend( {
 
 	onOrganizations: function( data ) {
 		_.each( data, function( org ) {
-			if ( _.contains( config.ignored.organizations, org.login ) ) {
+			if ( _.contains( ignoredOrgs, org.login ) ) {
 				debug( "Skipping ignored organization %s", org.login );
 			} else {
 				debug( "Preparing to read repositories for %s", org.login );

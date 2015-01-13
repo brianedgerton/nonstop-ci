@@ -1,6 +1,7 @@
+var config = require( "../config.js" );
 var _ = require( 'lodash' );
 var machina = require( 'machina' );
-var api = require( './api.js' );
+var api = require( './api.js' )( config );
 var store = require( './store.js' );
 var branches = require( './commands/getBranches.js' )( api, store );
 var tree = require( './commands/getTree.js' )( api, store );
@@ -33,7 +34,7 @@ module.exports = function( organization, repository ) {
 
 		hasBuildFile: function() {
 			return _.find( this.files, function( file ) {
-				return /strapping[.]yaml/.test( file.path );
+				return /nonstop[.]yaml/.test( file.path );
 			} );
 		},
 

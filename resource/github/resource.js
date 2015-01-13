@@ -1,6 +1,6 @@
 var _ = require( "lodash" );
 var when = require( "when" );
-var github = require( "../../src/github/store.js" );
+var store = require( "../../src/github/store.js" );
 
 module.exports = function( host ) {
 	return {
@@ -8,18 +8,18 @@ module.exports = function( host ) {
 		actions: [
 			{
 				alias: "list-org-repositories",
-				verb: "get",
+				method: "get",
 				topic: "organization.repositories",
-				path: "organization/:org/repository",
+				url: "organization/:org/repository",
 				handle: function( envelope ) {
-					github.watched( envelope.data.org )
+					store.watched( envelope.data.org )
 						.then( null, function( err ) {
 							envelope.reply( { statusCode: 500, data: { error: err } } );
 						} )
 						.then( function( data ) {
 							var list = [],
 								promises = _.map( data, function( x ) {
-									return github.repository( x.organization, x.repository )
+									return store.repository( x.organization, x.repository )
 										.then( function( data ) {
 											list.push( data[ 0 ].repository );
 										} );
@@ -33,11 +33,11 @@ module.exports = function( host ) {
 			},
 			{
 				alias: "list-organizations",
-				verb: "get",
+				method: "get",
 				topic: "list.organizations",
-				path: "organization",
+				url: "organization",
 				handle: function( envelope ) {
-					github.watched()
+					store.watched()
 						.then( null, function( err ) {
 							envelope.reply( { statusCode: 500, data: { error: err } } );
 						} )

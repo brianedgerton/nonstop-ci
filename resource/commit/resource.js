@@ -1,7 +1,7 @@
 var postal = require( "postal" );
 var channel = postal.channel( "commits" );
 var githubChannel = postal.channel( "github" );
-var debug = require( "debug" )( "strapping:hook" );
+var debug = require( "debug" )( "nonstop:hook" );
 
 function onCommit( commit, host ) {
 	debug( "GitHub reporting a commit for %s - %s", commit.repository.owner.name, commit.repository.name );
@@ -23,9 +23,9 @@ module.exports = function( host ) {
 		actions: [
 			{
 				alias: "new",
-				verb: "post",
+				method: "post",
 				topic: "new",
-				path: "",
+				url: "",
 				handle: function( envelope ) {
 					try {
 						if ( envelope.data.forkee ) {

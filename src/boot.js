@@ -1,5 +1,4 @@
-var _ = require( "lodash" ),
-	machina = require( "machina" );
+var machina = require( "machina" );
 
 module.exports = function( deps ) {
 	var server = deps.server;

@@ -38,9 +38,9 @@ module.exports = function( host ) {
 		actions: [
 			{
 				alias: "register",
-				verb: "post",
+				method: "post",
 				topic: "register",
-				path: "",
+				url: "",
 				handle: function( envelope ) {
 					console.log( "agent registered", envelope.data );
 					agentList[ envelope.data.name ] = envelope.data;
@@ -50,18 +50,18 @@ module.exports = function( host ) {
 			},
 			{
 				alias: "list",
-				verb: "get",
+				method: "get",
 				topic: "list",
-				path: "",
+				url: "",
 				handle: function( envelope ) {
 					envelope.reply( agentList );
 				}
 			},
 			{
 				alias: "get-build",
-				verb: "get",
+				method: "get",
 				topic: "get.build",
-				path: "build/:owner/:project/:branch/:version/:commit",
+				url: "build/:owner/:project/:branch/:version/:commit",
 				handle: function( envelope ) {
 					var data = envelope.data,
 						projectId = getProjectId( data ),
@@ -78,9 +78,9 @@ module.exports = function( host ) {
 			},
 			{
 				alias: "set-build",
-				verb: "post",
+				method: "post",
 				topic: "set.build",
-				path: "build/",
+				url: "build/",
 				handle: function( envelope ) {
 					var projectId = getProjectId( envelope ),
 						data = envelope.data,

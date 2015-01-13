@@ -1,6 +1,6 @@
 var when = require( 'when' );
 var machina = require( 'machina' );
-var debug = require( 'debug' )( 'command:branches' );
+var debug = require( 'debug' )( 'nonstop:command:branches' );
 
 function createCommand( github, store, org, repository ) {
 	var Machine = machina.Fsm.extend( {

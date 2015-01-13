@@ -46,4 +46,4 @@ module.exports = function( _config ) {
 	daedalus = require( 'daedalus' )( 'nonstop-ci', config.consul );
 
 	return wrapper;
-}
+};
