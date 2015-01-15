@@ -4,7 +4,8 @@
   "description": "A gulp-based, simplistic CI solution for creating nonstop bundles from github repositories",
   "main": "src/index.js",
   "scripts": {
-    "test": "gulp test"
+    "test": "gulp test",
+    "start": "gulp start"
   },
   "repository": {
     "type": "git",
@@ -52,6 +53,7 @@
     "gulp-jshint": "1.9.x",
     "jshint-stylish": "1.0.x",
     "gulp-watch": "3.0.x",
-    "sinon": "1.11.x"
+    "sinon": "1.11.x",
+    "processhost": "0.2.x"
   }
 }

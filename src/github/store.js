@@ -176,6 +176,7 @@ function version( projectKey, projectVersion ) {
 }
 
 module.exports = {
+	user: user,
 	organizations: organizations,
 	repository: repository,
 	repositories: repositoryList,

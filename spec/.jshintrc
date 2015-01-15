@@ -91,7 +91,8 @@
 		"after",
 		"afterEach",
 		"it",
-		"require"
+		"require",
+		"process"
 	],
 
 	// LEGACY

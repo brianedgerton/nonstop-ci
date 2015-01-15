@@ -10,7 +10,9 @@ var initialChoices = {
 		start: 'Start service'
 	},
 	reverseLookup = {};
-_.each( initialChoices, function( val, key ) { reverseLookup[ val ] = key; } );
+_.each( initialChoices, function( val, key ) {
+	reverseLookup[ val ] = key;
+} );
 
 commander
 	.option( '-s, --start', 'Start service immediately' )
@@ -72,6 +74,16 @@ function tokenPrompt( cb ) {
 	], cb );
 }
 
+function twoFactorPrompt( cb ) {
+	inquire.prompt( [
+		{
+			type: 'input',
+			name: 'token',
+			message: 'Authorization Code'
+		}
+	], cb );
+}
+
 module.exports = {
 	admin: adminPrompt,
 	choices: initialChoices,
@@ -79,5 +91,6 @@ module.exports = {
 	initiate: initiatePrompt,
 	lookup: reverseLookup,
 	start: commander.start,
-	token: tokenPrompt
+	token: tokenPrompt,
+	twoFactor: twoFactorPrompt
 };

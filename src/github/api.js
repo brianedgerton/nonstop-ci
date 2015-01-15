@@ -6,7 +6,7 @@ var tokenApi = require( "./token.js" );
 var ghUser, ghToken;
 var GHAPI = require( "github" );
 var databass = require( "./store.js" );
-var debug = require( "debug" )( "github:api" );
+var debug = require( "debug" )( "nonstop:github:api" );
 
 var config;
 var nonstopCi;
@@ -66,16 +66,32 @@ function createHook( org, repository ) {
 		} );
 }
 
-function createToken( user, cb ) {
+function createToken( user, options, cb ) {
+	var _cb;
+	var _options;
+	if ( _.isFunction( options ) ) {
+		_cb = options;
+		_options = {};
+	} else {
+		_options = options;
+		_cb = cb;
+	}
+
 	var request = {
 		scopes: [ "repo" ],
 		note: "Token obtained by nonstop on " + moment( Date.now() ).toLocaleString()
 	};
+
+	if ( _options.twoFactorToken ) {
+		request.headers = request.headers || {};
+		request.headers[ "X-GitHub-OTP" ] = _options.twoFactorToken;
+	}
+
 	github.authorization.create( request, function( err, doc ) {
 		if ( !err ) {
 			tokenApi.write( doc.id, user, doc.token );
 		}
-		cb( err, doc );
+		_cb( err, doc );
 	} );
 }
 
@@ -129,7 +145,7 @@ function fetchBranches( org, repository, headers ) {
 			return undefined;
 		} )
 		.then( function( data ) {
-			if ( /^304/.test( data.meta.status ) ) {
+			if ( isUnchanged( data ) ) {
 				return undefined;
 			} else {
 				debug( "Rates limit (branch: %s - %s [%s]): %s remaining: %s", org, repository, JSON.stringify( headers ), data.meta[ "x-ratelimit-limit" ], data.meta[ "x-ratelimit-remaining" ] );
@@ -163,7 +179,7 @@ function fetchRepositories( owner, headers ) {
 	args.headers = headers;
 	return fetch( args )
 		.then( function( data ) {
-			if ( /^304/.test( data.meta.status ) ) {
+			if ( isUnchanged( data ) ) {
 				return undefined;
 			} else {
 				debug( "Rates limit (repos): %s remaining: %s", data.meta[ "x-ratelimit-limit" ], data.meta[ "x-ratelimit-remaining" ] );
@@ -198,7 +214,7 @@ function fetchOrgs() {
 						databass.organizations().then( resolve );
 					} )
 					.then( function( data ) {
-						if ( /^304/.test( data.meta.status ) ) {
+						if ( isUnchanged( data ) ) {
 							databass.organizations().then( resolve );
 						} else {
 							debug( "Rates limit (orgs): %s remaining: %s", data.meta[ "x-ratelimit-limit" ], data.meta[ "x-ratelimit-remaining" ] );
@@ -223,7 +239,7 @@ function fetchUser() {
 						databass.user( ghUser ).then( resolve );
 					} )
 					.then( function( data ) {
-						if ( /^304/.test( data.meta.status ) ) {
+						if ( isUnchanged( data ) ) {
 							databass.user( ghUser ).then( resolve );
 						} else {
 							debug( "Rates limit (user): %s remaining: %s", data.meta[ "x-ratelimit-limit" ], data.meta[ "x-ratelimit-remaining" ] );
@@ -259,7 +275,7 @@ function fetchTree( org, repository, sha, headers ) {
 		headers: headers
 	} )
 		.then( function( data ) {
-			if ( /^304/.test( data.meta.status ) ) {
+			if ( isUnchanged( data ) ) {
 				return undefined;
 			} else {
 				debug( "Rates limit (tree): %s remaining: %s", data.meta[ "x-ratelimit-limit" ], data.meta[ "x-ratelimit-remaining" ] );
@@ -284,6 +300,10 @@ function getHeadersFor( key ) {
 			}
 			return headers;
 		} );
+}
+
+function isUnchanged( data ) {
+	return /^304/.test( data.meta.status );
 }
 
 function readToken() {
@@ -330,4 +350,4 @@ module.exports = function( _config ) {
 	hookMatch = url.split( "://" )[ 1 ];
 
 	return wrapper;
-}
+};

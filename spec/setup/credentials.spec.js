@@ -15,7 +15,7 @@ describe( "Credentials Setup", function() {
 			changeUserRoles: sinon.stub().returns( when( true ) ),
 			createToken: sinon.stub().returns( when( true ) ),
 			changeActionRoles: sinon.stub().returns( when( true ) )
-		}
+		};
 		server = {
 			auth: auth
 		};
@@ -27,7 +27,7 @@ describe( "Credentials Setup", function() {
 		var creds = { user: "frosty the snowman", password: "test123" };
 		var request;
 		before( function() {
-			request = credentials.createCredentials( creds )
+			request = credentials.createCredentials( creds );
 		} );
 
 		it( "should create the proper role", function() {
