@@ -29,7 +29,7 @@ describe( "Boot FSM", function() {
 
 	before( function() {
 		config = require( "../src/config.js" );
-		server = require( "../src/server.js" )( config ),
+		server = require( "../src/server.js" )( config );
 		deps = {
 			api: require( "../src/github/api.js" )( config ),
 			server: server,

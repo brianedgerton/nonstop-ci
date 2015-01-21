@@ -5,7 +5,6 @@ var channel = postal.channel( "agents" );
 var token = require( "../../src/github/token.js" );
 var ghtoken = token.read().token;
 var commits = postal.channel( "commits" );
-var buildCount = require( "../../src/github/buildCount.js" );
 
 module.exports = function( host ) {
 	var agentList = {};
@@ -29,10 +28,6 @@ module.exports = function( host ) {
 		} );
 	} );
 
-	function getProjectId( data ) {
-		return [ data.owner, data.project, data.branch ].join( "/" );
-	}
-
 	return {
 		name: "agent",
 		actions: [
@@ -55,45 +50,6 @@ module.exports = function( host ) {
 				url: "",
 				handle: function( envelope ) {
 					envelope.reply( agentList );
-				}
-			},
-			{
-				alias: "get-build",
-				method: "get",
-				topic: "get.build",
-				url: "build/:owner/:project/:branch/:version/:commit",
-				handle: function( envelope ) {
-					var data = envelope.data,
-						projectId = getProjectId( data ),
-						commit = data.commit,
-						version = data.version;
-					buildCount.get( projectId, version, commit )
-						.then( function( count ) {
-							envelope.reply( { data: { count: count } } );
-						} )
-						.then( null, function( err ) {
-							envelope.reply( { statusCode: 500, data: err } );
-						} );
-				}
-			},
-			{
-				alias: "set-build",
-				method: "post",
-				topic: "set.build",
-				url: "build/",
-				handle: function( envelope ) {
-					var projectId = getProjectId( envelope ),
-						data = envelope.data,
-						commit = data.commit,
-						version = data.version,
-						count = data.buildCount;
-					buildCount.set( projectId, version, commit, count )
-						.then( function( count ) {
-							envelope.reply( { data: { count: count } } );
-						} )
-						.then( null, function( err ) {
-							envelope.reply( { statusCode: 500, data: err } );
-						} );
 				}
 			}
 		]

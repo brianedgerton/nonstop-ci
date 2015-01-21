@@ -5,7 +5,7 @@ var _ = require( "lodash" );
 var machina = require( "machina" );
 var api = require( "./api.js" )( config );
 var store = require( "./store.js" );
-var repository = require( "./repository" );
+var repository = require( "./repository.fsm" );
 var debug = require( "debug" )( "nonstop:fsm" );
 
 var repositories = require( "./commands/getRepositories.js" )( api, store );

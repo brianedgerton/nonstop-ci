@@ -54,6 +54,8 @@
     "jshint-stylish": "1.0.x",
     "gulp-watch": "3.0.x",
     "sinon": "1.11.x",
-    "processhost": "0.2.x"
+    "processhost": "0.2.x",
+    "nock": "0.57.0",
+    "http-status-codes": "1.0.4"
   }
 }

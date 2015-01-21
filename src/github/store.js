@@ -10,7 +10,7 @@ var path = require( 'path' ),
 		return path.join( process.cwd(), 'data', name ) + '.db';
 	},
 	orglist = wrap( new Datastore( { filename: getPath( 'orgs' ), autoload: true } ) ),
-	user = wrap( new Datastore( { filename: getPath( 'owner' ), autoload: true } ) ),
+	users = wrap( new Datastore( { filename: getPath( 'owner' ), autoload: true } ) ),
 	repositories = wrap( new Datastore( { filename: getPath( 'repos' ), autoload: true } ) ),
 	contents = wrap( new Datastore( { filename: getPath( 'contents' ), autoload: true } ) ),
 	stamps = wrap( new Datastore( { filename: getPath( 'stamps' ), autoload: true } ) ),
@@ -60,9 +60,9 @@ function organizations( list ) {
 
 function user( owner, data ) {
 	if ( data ) {
-		return upsert( user, { user: owner }, data );
+		return upsert( users, { user: owner }, data );
 	} else {
-		return fetch( user, { user: owner } );
+		return fetch( users, { user: owner } );
 	}
 }
 
