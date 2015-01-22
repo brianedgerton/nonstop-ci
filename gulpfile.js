@@ -6,41 +6,67 @@ var jshint = require( "gulp-jshint" );
 var open = require( "open" ); //jshint ignore:line
 var testFiles = "./spec/**/*.spec.js";
 
-gulp.task( "test", function( done ) {
-	gulp.src( testFiles )
-		.pipe( mocha( {
-			reporter: "spec"
-		} ) )
-		.on( "error", function( err ) {
-			console.log( err.stack );
+function cover( done ) {
+	gulp.src( [ "./src/**/*.js" ] )
+		.pipe( istanbul() )
+		.pipe( istanbul.hookRequire() )
+		.on( "finish", function() {
+			done( runSpecs() );
+		} );
+}
+
+function runSpecs() { // jshint ignore : line
+	return gulp.src( [ testFiles ], { read: false } )
+		.pipe( mocha( { reporter: "spec" } ) );
+}
+
+function writeReport( cb, openBrowser, tests ) {
+	tests
+		.on( "error", function( e ) {
+			console.log( "error occurred during testing", e.stack );
 		} )
+		.pipe( istanbul.writeReports() )
 		.on( "end", function() {
-			// setTimeout( function() {
-			// 	console.log( process._getActiveRequests() );
-			// 	console.log( process._getActiveHandles() );
-			// }, 2000 );
-			done();
+			if ( openBrowser ) {
+				open( "./coverage/lcov-report/index.html" );
+			}
+			cb();
+		} );
+}
+
+gulp.task( "continuous-coverage", function( cb ) {
+	cover( writeReport.bind( undefined, cb, false ) );
+} );
+
+gulp.task( "continuous-test", function() {
+	return runSpecs()
+		.on( "end", function() {
+			console.log( process._getActiveRequests() );
+			console.log( process._getActiveHandles() );
 		} );
 } );
 
-gulp.task( "watch", [ "test" ], function() {
-	gulp.watch( [ testFiles, "./src/**" ], [ "test" ] );
+gulp.task( "test", function() {
+	return runSpecs()
+		.on( "end", process.exit.bind( process, 0 ) )
+		.on( "error", process.exit.bind( process, 1 ) );
 } );
 
 gulp.task( "coverage", function( cb ) {
-	gulp.src( [ "./src/**/*.js" ] )
-		.pipe( istanbul() ) // Covering files
-		.pipe( istanbul.hookRequire() ) // Force `require` to return covered files
-		.on( "finish", function() {
-			gulp.src( testFiles )
-				.pipe( mocha() )
-				.pipe( istanbul.writeReports() ) // Creating the reports after tests runned
-				.on( "end", function() {
-					open( "./coverage/lcov-report/index.html" );
-					cb();
-				} );
-		} );
+	cover( writeReport.bind( undefined, cb, true ) );
 } );
+
+gulp.task( "coverage-watch", function() {
+	gulp.watch( [ "./src/**/*", "./spec/**/*" ], [ "continuous-coverage" ] );
+} );
+
+gulp.task( "test-watch", function() {
+	gulp.watch( [ "./src/**/*", "./spec/**/*" ], [ "continuous-test" ] );
+} );
+
+gulp.task( "default", [ "continuous-coverage", "coverage-watch" ], function() {} );
+
+gulp.task( "specs", [ "continuous-test", "test-watch" ], function() {} );
 
 gulp.task( "lint", function() {
 	return gulp.src( [ "./src/**/*.js", "./spec/**/*.js" ] )

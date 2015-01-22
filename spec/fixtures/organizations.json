@@ -1,0 +1,18 @@
+{
+	"from-user": [
+		{
+			"login": "github",
+			"id": 1,
+			"url": "https://api.github.com/orgs/github",
+			"avatar_url": "https://github.com/images/error/octocat_happy.gif",
+			"description": "A great organization"
+		},
+		{
+			"login": "banditsoftware",
+			"id": 1,
+			"url": "https://api.github.com/orgs/github",
+			"avatar_url": "https://github.com/images/error/octocat_happy.gif",
+			"description": "A great organization"
+		}
+	]
+}

@@ -8,11 +8,6 @@ var GHAPI = require( "github" );
 var databass = require( "./store.js" );
 var debug = require( "debug" )( "nonstop:github:api" );
 
-var config;
-var nonstopCi;
-var url;
-var hookMatch;
-
 var github = new GHAPI( {
 	version: "3.0.0",
 	debug: false,
@@ -42,28 +37,30 @@ function checkToken() {
 	return tokenApi.check();
 }
 
-function createHook( org, repository ) {
-	var create = nodeWhen.lift( github.repos.createHook );
-	return create( {
-		user: org,
-		repo: repository,
-		name: "web",
-		events: [ "push", "fork", "create", "delete", "pull request" ],
-		active: true,
-		config: {
-			url: url,
-			content_type: "json", // jshint ignore:line
-			insecure_ssl: 1 // jshint ignore:line
-		}
-	} )
-		.then( null, function( err ) {
-			debug( "Error creating web hook for %s - %s: %s", org, repository, err.stack );
+function createHookFn( url ) {
+	return function( org, repository ) {
+		var create = nodeWhen.lift( github.repos.createHook );
+		return create( {
+			user: org,
+			repo: repository,
+			name: "web",
+			events: [ "push", "fork", "create", "delete", "pull request" ],
+			active: true,
+			config: {
+				url: url,
+				content_type: "json", // jshint ignore:line
+				insecure_ssl: 1 // jshint ignore:line
+			}
 		} )
-		.then( function( data ) {
-			debug( "Created new web hook for %s - %s", org, repository );
-			databass.watched( org, repository );
-			return data;
-		} );
+			.then( function( data ) {
+				debug( "Created new web hook for %s - %s", org, repository );
+				databass.watched( org, repository );
+				return data;
+			}, function( err ) {
+					debug( "Error creating web hook for %s - %s: %s", org, repository, err.stack );
+					return false;
+				} );
+	};
 }
 
 function createToken( user, options, cb ) {
@@ -95,19 +92,23 @@ function createToken( user, options, cb ) {
 	} );
 }
 
-function fetchHook( org, repository ) {
-	var fetch = nodeWhen.lift( github.repos.getHooks );
-	return fetch( { user: org, repo: repository } )
-		.then( function( data ) {
-			var hookExists = _.find( data, function( h ) {
-				debug( "Hook for %s - %s found with URL %s", org, repository, h.config.url );
-				return h.config.url.indexOf( hookMatch ) >= 0;
+function fetchHookFn( hookMatch ) {
+
+	return function( org, repository ) {
+		var fetch = nodeWhen.lift( github.repos.getHooks );
+		return fetch( { user: org, repo: repository } )
+			.then( function( data ) {
+				var hookExists = _.find( data, function( h ) {
+					debug( "Hook for %s - %s found with URL %s", org, repository, h.config.url );
+					return h.config.url.indexOf( hookMatch ) >= 0;
+				} );
+				if ( hookExists ) {
+					databass.watched( org, repository );
+				}
+				return hookExists;
 			} );
-			if ( hookExists ) {
-				databass.watched( org, repository );
-			}
-			return hookExists;
-		} );
+	};
+
 }
 
 function fetchBranch( org, repository, branch ) {
@@ -233,7 +234,7 @@ function fetchUser() {
 		getHeadersFor( key )
 			.then( function( headers ) {
 				var args = { user: ghUser };
-				args.headers = args;
+				args.headers = headers;
 				fetch( args )
 					.then( null, function( err ) {
 						databass.user( ghUser ).then( resolve );
@@ -303,7 +304,11 @@ function getHeadersFor( key ) {
 }
 
 function isUnchanged( data ) {
-	return /^304/.test( data.meta.status );
+	if ( data && data.meta && data.meta.status ) {
+		return /^304/.test( data.meta.status );
+	} else {
+		return false;
+	}
 }
 
 function readToken() {
@@ -323,31 +328,31 @@ function saveStampFor( key, response ) {
 	}
 }
 
-var wrapper = {
-	authenticateBasic: authenticateBasic,
-	authenticateToken: authenticateToken,
-	checkToken: checkToken,
-	createHook: createHook,
-	createToken: createToken,
-	fetchBranch: fetchBranch,
-	fetchAllBranches: fetchAllBranches,
-	fetchLatestBranches: fetchLatestBranches,
-	fetchHook: fetchHook,
-	fetchAllRepositories: fetchAllRepositories,
-	fetchLatestRepositories: fetchLatestRepositories,
-	fetchOrganizations: fetchOrgList,
-	fetchLatestTree: fetchLatestTree,
-	fetchTreeChanges: fetchTreeChanges,
-	readToken: readToken,
-	writeToken: tokenApi.write
-};
-
 module.exports = function( _config ) {
-	config = _config;
+	var config = _config;
 
-	nonstopCi = config.nonstop.ci;
-	url = nonstopCi.url || "http://" + config.ngrok.subdomain + ".ngrok.com/api/commit";
-	hookMatch = url.split( "://" )[ 1 ];
+	var nonstopCi = config.nonstop.ci;
+	var url = nonstopCi.url || "http://" + config.ngrok.subdomain + ".ngrok.com/api/commit";
+	var hookMatch = url.split( "://" )[ 1 ];
+
+	var wrapper = {
+		authenticateBasic: authenticateBasic,
+		authenticateToken: authenticateToken,
+		checkToken: checkToken,
+		createHook: createHookFn( url ),
+		createToken: createToken,
+		fetchBranch: fetchBranch,
+		fetchAllBranches: fetchAllBranches,
+		fetchLatestBranches: fetchLatestBranches,
+		fetchHook: fetchHookFn( hookMatch ),
+		fetchAllRepositories: fetchAllRepositories,
+		fetchLatestRepositories: fetchLatestRepositories,
+		fetchOrganizations: fetchOrgList,
+		fetchLatestTree: fetchLatestTree,
+		fetchTreeChanges: fetchTreeChanges,
+		readToken: readToken,
+		writeToken: tokenApi.write
+	};
 
 	return wrapper;
 };

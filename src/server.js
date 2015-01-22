@@ -22,7 +22,7 @@ function start() {
 				if ( err ) {
 					console.log( err, url );
 				} else {
-					var githubFsm = require( './github/fsm.js' );
+					var githubFsm = require( './github/main.fsm.js' );
 				}
 			} );
 	} catch (err) {
