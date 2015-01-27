@@ -23,7 +23,11 @@ function runSpecs() { // jshint ignore : line
 function writeReport( cb, openBrowser, tests ) {
 	tests
 		.on( "error", function( e ) {
-			console.log( "error occurred during testing", e.stack );
+			console.log( "Test Error" );
+			if ( e.stack ) {
+				console.log( e.stack );
+			}
+			cb();
 		} )
 		.pipe( istanbul.writeReports() )
 		.on( "end", function() {
