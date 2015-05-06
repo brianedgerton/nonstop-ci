@@ -1,13 +1,13 @@
-var config = require( "../config.js" );
 var postal = require( "postal" );
 var channel = postal.channel( "github" );
 var _ = require( "lodash" );
 var machina = require( "machina" );
-var api = require( "./api.js" )( config );
-var store = require( "./store.js" );
-var repository = require( "./repository.fsm" );
 var debug = require( "debug" )( "nonstop:fsm" );
 
+var config = require( "../config.js" );
+var api = require( "./api.js" )( config );
+var store = require( "./store.js" );
+var repository = require( "./repository.fsm" ).bind( undefined, config, api );
 var repositories = require( "./commands/getRepositories.js" )( api, store );
 
 var ignoredOrgs = ( config.ignored && config.ignored.organizations ) || [];

@@ -11,7 +11,7 @@ var boot;
 var emptyConfig = { server: { auth: {} } };
 
 function patchTransition( fsm ) {
-	fsm.transitionForReal = _.clone( fsm.transition );
+	fsm.transitionForReal = fsm.transition;
 	fsm.transition = sinon.stub( fsm, "transition" );
 }
 
@@ -59,7 +59,6 @@ describe( "Boot FSM", function() {
 				var cfg = createConfig( { admin: deps.admin } );
 				cfg.admin.hasAdmin = sinon.stub( cfg.admin, "hasAdmin" ).returns( when( true ) );
 				var app = getApp( cfg );
-
 				app.transitionForReal( "checkingForAdmin" );
 
 				_.defer( function() {
