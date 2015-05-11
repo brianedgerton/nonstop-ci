@@ -1,7 +1,6 @@
 var path = require( 'path' );
 
-module.exports = require( 'configya' )
-(
+module.exports = require( 'configya' )(
 	path.join( process.cwd(), './config.json' ),
 	{
 		ngrok: {
@@ -12,9 +11,6 @@ module.exports = require( 'configya' )
 			ci: {
 				port: 8855
 			}
-		},
-		consul: {
-			dc: 'dc1'
 		}
 	}
 );

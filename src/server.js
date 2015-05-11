@@ -1,5 +1,6 @@
 var ngrok = require( 'ngrok' );
 var host = require( 'autohost' );
+var _ = require( 'lodash' );
 var authProvider = require( 'autohost-nedb-auth' )( {} );
 var daedalus;
 var server;
@@ -15,7 +16,9 @@ function start() {
 		}, authProvider );
 		server.start();
 
-		daedalus.register( config.nonstop.ci.port, [ '0.1.0', 'nonstop', 'ci' ] );
+		if ( daedalus ) {
+			daedalus.register( config.nonstop.ci.port, [ '0-1-0', 'nonstop', 'ci' ] );
+		}
 
 		ngrok.connect( {
 			port: config.nonstop.ci.port,
@@ -46,7 +49,12 @@ var wrapper = {
 module.exports = function( _config ) {
 	config = _config;
 
-	daedalus = require( 'daedalus' )( 'nonstop-ci', config.consul );
+	if ( config.consul === true || !_.isEmpty( config.consul ) ) {
+		if ( config.consul === true ) {
+			config.consul = {};
+		}
+		daedalus = require( 'daedalus' )( 'nonstop-ci', config.consul );
+	}
 
 	return wrapper;
 };
