@@ -5,7 +5,7 @@ var handler;
 var channel;
 var githubChannel;
 
-describe.only( "Commit Resource Handler", function() {
+describe( "Commit Resource Handler", function() {
 
 	before( function() {
 		handler = require( "../../src/resource/commit.js" );
