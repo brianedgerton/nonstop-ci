@@ -57,9 +57,9 @@ function createHookFn( url ) {
 				databass.watched( org, repository );
 				return data;
 			}, function( err ) {
-					debug( "Error creating web hook for %s - %s: %s", org, repository, err.stack );
-					return false;
-				} );
+				debug( "Error creating web hook for %s - %s: %s", org, repository, err.stack );
+				return false;
+			} );
 	};
 }
 
@@ -206,23 +206,26 @@ function fetchOrgs() {
 	var key = { orgs: "orglist" };
 	var fetch = nodeWhen.lift( github.orgs.getFromUser.bind( github.orgs ) );
 	return when.promise( function( resolve, reject ) {
+		var onError = function( err ) {
+			databass.organizations().then( resolve );
+		};
+
+		var onSuccess = function( data ) {
+			if ( isUnchanged( data ) ) {
+				databass.organizations().then( resolve );
+			} else {
+				debug( "Rates limit (orgs): %s remaining: %s", data.meta[ "x-ratelimit-limit" ], data.meta[ "x-ratelimit-remaining" ] );
+				saveStampFor( key, data );
+				databass.organizations( data );
+				resolve( data );
+			}
+		};
+
 		getHeadersFor( key )
 			.then( function( headers ) {
 				var args = { user: ghUser, per_page: "100" }; // jshint ignore:line
 				args.headers = headers;
-				fetch( args )
-					.then( null, function( err ) {
-						databass.organizations().then( resolve );
-					} )
-					.then( function( data ) {
-						if ( isUnchanged( data ) ) {
-							databass.organizations().then( resolve );
-						} else {
-							debug( "Rates limit (orgs): %s remaining: %s", data.meta[ "x-ratelimit-limit" ], data.meta[ "x-ratelimit-remaining" ] );
-							saveStampFor( key, data );
-							resolve( data );
-						}
-					} );
+				fetch( args ).then( onSuccess, onError );
 			} );
 	} );
 }
