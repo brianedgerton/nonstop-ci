@@ -37,7 +37,7 @@ module.exports = function( config, api, store, organization, repository ) {
 
 		hasBuildFile: function() {
 			return _.find( this.files, function( file ) {
-				return /nonstop[.]yaml/.test( file.path );
+				return /nonstop[.](yaml|json)/.test( file.path );
 			} );
 		},
 
@@ -117,8 +117,8 @@ module.exports = function( config, api, store, organization, repository ) {
 							this.hasHook = true;
 							this.transition( "polling" );
 						}.bind( this ), function( err ) {
-								this.transition( "polling" );
-							}.bind( this ) );
+							this.transition( "polling" );
+						}.bind( this ) );
 
 				},
 				"hook.found": function() {

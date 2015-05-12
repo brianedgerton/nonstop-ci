@@ -71,8 +71,10 @@ describe( "Repository FSM", function() {
 
 	describe( "when checking for a build file", function() {
 		var originalFiles;
-		var trueFiles = [ { path: "index.js" }, { path: "config.json" }, { path: "src/nonstop.yaml" } ];
+		var trueFilesYaml = [ { path: "index.js" }, { path: "config.json" }, { path: "src/nonstop.yaml" } ];
+		var trueFilesJson = [ { path: "index.js" }, { path: "config.json" }, { path: "src/nonstop.json" } ];
 		var falseFiles = [ { path: "index.js" }, { path: "config.json" }, { path: "server.js" } ];
+
 		before( function() {
 			originalFiles = fsm.files;
 		} );
@@ -81,8 +83,13 @@ describe( "Repository FSM", function() {
 			fsm.files = originalFiles;
 		} );
 
-		it( "should return true if the file is present", function() {
-			fsm.files = trueFiles;
+		it( "should return true if a nonstop yaml file is present", function() {
+			fsm.files = trueFilesYaml;
+			fsm.hasBuildFile().should.be.ok;
+		} );
+
+		it( "should return true if a nonstop json file is present", function() {
+			fsm.files = trueFilesJson;
 			fsm.hasBuildFile().should.be.ok;
 		} );
 
