@@ -250,6 +250,8 @@ describe( "Github API Wrapper", function() {
 		before( function() {
 			stamp = sinon.stub( databass, "stamp" ).returns( when( [ headers ] ) );
 			mocker.github( "repos:get-branches", { user: "myuser", repo: "myrepo", per_page: 100 } )
+				.matchHeader( "if-modified-since", headers.stamp )
+				.matchHeader( "if-none-match", headers.tag )
 				.reply( 304 );
 			request = api.fetchLatestBranches( "myuser", "myrepo" );
 		} );
@@ -349,6 +351,8 @@ describe( "Github API Wrapper", function() {
 		before( function() {
 			stamp = sinon.stub( databass, "stamp" ).returns( when( [ headers ] ) );
 			mocker.github( "repos:get-from-org", { org: "myorg", per_page: 100 } )
+				.matchHeader( "if-modified-since", headers.stamp )
+				.matchHeader( "if-none-match", headers.tag )
 				.reply( 304 );
 			request = api.fetchLatestRepositories( "myorg" );
 		} );
@@ -390,9 +394,13 @@ describe( "Github API Wrapper", function() {
 				stamp.withArgs( { userInfo: userToken.user } ).returns( when( {} ) );
 
 				mocker.github( "orgs:get-from-user", { user: userToken.user, per_page: 100 } )
+					.matchHeader( "if-modified-since", orgHeaders.stamp )
+					.matchHeader( "if-none-match", orgHeaders.tag )
 					.replyWithFixture( 200, "organizations:from-user", orgHeaders );
 
 				mocker.github( "user:get-from", { user: userToken.user } )
+					.matchHeader( "if-modified-since", userHeaders.stamp )
+					.matchHeader( "if-none-match", userHeaders.tag )
 					.replyWithFixture( 200, "user:octocat", userHeaders );
 
 				request = api.fetchOrganizations();
