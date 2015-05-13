@@ -11,7 +11,8 @@ module.exports = function( deps ) {
 
 	var Machine = machina.Fsm.extend( {
 
-		go: function() {
+		go: function( options ) {
+			this.options = options || {};
 			this.transition( "checkingForAdmin" );
 		},
 
@@ -71,7 +72,7 @@ module.exports = function( deps ) {
 			},
 			checkingParameters: {
 				_onEnter: function() {
-					var nextState = prompt.start ? "start" : "prompt";
+					var nextState = (prompt.start || this.options.server) ? "start" : "prompt";
 					this.transition( nextState );
 				}
 			},

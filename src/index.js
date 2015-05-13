@@ -13,4 +13,12 @@ var app = require( "./boot.js" )( {
 	credentials: credentials
 } );
 
-app.go();
+function start( args ) {
+	app.go( args );
+}
+
+module.exports = start;
+
+if ( !module.parent ) {
+	start();
+}

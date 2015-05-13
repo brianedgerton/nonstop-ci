@@ -1,0 +1,17 @@
+#!/usr/bin/env node
+
+var program = require( "commander" );
+
+program
+	.version( "0.0.1" )
+	.usage( "[options]" )
+	.option( "-s, --server", "Start Nonstop CI in server mode" )
+	.parse( process.argv );
+
+var config = {
+	server: !!program.server
+};
+
+var nonstop = require( "../src/index.js" );
+
+nonstop( config );
