@@ -4,8 +4,6 @@ var postal = require( "postal" );
 var request = require( "request" );
 var agentChannel = postal.channel( "agents" );
 var commitChannel = postal.channel( "commits" );
-var token = require( "../../src/github/token.js" );
-var ghtoken = token.read().token;
 var handler;
 var channel;
 
@@ -41,6 +39,12 @@ describe( "Agent Resource Handler", function() {
 				url: "http://sendmeyourdata.com"
 			}
 		};
+		var creds = { token: "123" };
+		var github = {
+			getCredentials: function() {
+				return creds;
+			}
+		};
 		var result;
 		var response;
 		before( function( done ) {
@@ -48,7 +52,7 @@ describe( "Agent Resource Handler", function() {
 				result = data;
 				done();
 			} );
-			response = handler.register( envelope );
+			response = handler.register( envelope, github );
 		} );
 
 		after( function() {
@@ -64,10 +68,9 @@ describe( "Agent Resource Handler", function() {
 		} );
 
 		it( "should include the ghtoken in the response", function() {
-			ghtoken.should.be.ok;
 			response.should.eql( {
 				data: {
-					token: ghtoken
+					token: "123"
 				}
 			} );
 		} );

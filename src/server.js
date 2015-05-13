@@ -5,6 +5,7 @@ var authProvider = require( 'autohost-nedb-auth' )( {} );
 var daedalus;
 var server;
 var config;
+var api;
 
 function start() {
 	try {
@@ -15,6 +16,8 @@ function start() {
 			anonymous: [ '/api/commit' ]
 		}, authProvider );
 		server.start();
+
+		server.fount.register( 'github', api );
 
 		if ( daedalus ) {
 			daedalus.register( config.nonstop.ci.port, [ '0-1-0', 'nonstop', 'ci' ] );
@@ -46,8 +49,9 @@ var wrapper = {
 	stop: stop
 };
 
-module.exports = function( _config ) {
+module.exports = function( _config, _api ) {
 	config = _config;
+	api = _api;
 
 	if ( config.consul === true || !_.isEmpty( config.consul ) ) {
 		if ( config.consul === true ) {

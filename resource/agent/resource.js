@@ -1,7 +1,6 @@
 var handlers = require( "../../src/resource/agent.js" );
 
-module.exports = function( host ) {
-
+module.exports = function( host, github ) {
 	return {
 		name: "agent",
 		actions: [
@@ -12,7 +11,7 @@ module.exports = function( host ) {
 				url: "",
 				handle: function( envelope ) {
 					console.log( "agent registered", envelope.data );
-					var response = handlers.register( envelope );
+					var response = handlers.register( envelope, github );
 					envelope.reply( response );
 				}
 			},

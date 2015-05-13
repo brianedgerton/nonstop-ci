@@ -10,13 +10,11 @@ var api = require( "../../src/github/api" )( { nonstop: { ci: { url: "https://no
 
 
 function setUserToken( userToken ) {
-	var readToken = sinon.stub( tokenApi, "read" ).returns( userToken );
-	api.readToken();
-	readToken.restore();
+	api.setCredentials( userToken );
 }
 
 function resetUserToken() {
-	setUserToken( { user: null, token: null } );
+	api.setCredentials( { user: null, token: null } );
 }
 
 describe( "Github API Wrapper", function() {
@@ -27,6 +25,22 @@ describe( "Github API Wrapper", function() {
 			api.checkToken();
 			check.called.should.be.ok;
 			check.restore();
+		} );
+	} );
+
+	describe( "when getting the github credentials", function() {
+		var creds = { token: "doesntmatter", user: "someuser" };
+		before( function() {
+			setUserToken( creds );
+
+		} );
+
+		it( "should return the correct user and token", function() {
+			api.getCredentials().should.eql( creds );
+		} );
+
+		after( function() {
+			resetUserToken();
 		} );
 	} );
 
@@ -311,17 +325,20 @@ describe( "Github API Wrapper", function() {
 		} );
 
 		describe( "when a github user is present", function() {
-			var request;
+			var repos;
 			var stamp;
-			var readToken;
 
-			before( function() {
+			before( function( done ) {
 				setUserToken( { user: "myuser", token: "sometoken" } );
 				stamp = sinon.stub( databass, "stamp" );
 				mocker.github( "repos:get-from-user", { user: "myuser", type: "all", sort: "updated", per_page: 100 } )
 					.replyWithFixture( 200, "repos:from-user" );
 
-				request = api.fetchAllRepositories( "myuser" );
+				api.fetchAllRepositories( "myuser" )
+					.then( function( results ) {
+						repos = results;
+						done();
+					} );
 			} );
 
 			after( function() {
@@ -330,11 +347,8 @@ describe( "Github API Wrapper", function() {
 				mocker.reset();
 			} );
 
-			it( "should retrieve the list from the user", function( done ) {
-				request.then( function( repos ) {
-					repos.length.should.equal( 1 );
-					done();
-				} );
+			it( "should retrieve the list from the user", function() {
+				repos.length.should.equal( 1 );
 			} );
 		} );
 
@@ -385,10 +399,12 @@ describe( "Github API Wrapper", function() {
 				"ETag": "686897696a7c876b7f",
 				"Last-Modified": "Wed, 15 Nov 1998 04:58:08 GMT"
 			};
-
-			before( function() {
+			var orgs;
+			var orgStore;
+			before( function( done ) {
 				setUserToken( userToken );
 				stamp = sinon.stub( databass, "stamp" );
+				orgStore = sinon.stub( databass, "organizations" );
 
 				stamp.withArgs( { orgs: "orglist" } ).returns( when( {} ) );
 				stamp.withArgs( { userInfo: userToken.user } ).returns( when( {} ) );
@@ -403,36 +419,36 @@ describe( "Github API Wrapper", function() {
 					.matchHeader( "if-none-match", userHeaders.tag )
 					.replyWithFixture( 200, "user:octocat", userHeaders );
 
-				request = api.fetchOrganizations();
+				api.fetchOrganizations()
+					.then( function( _orgs ) {
+						orgs = _orgs;
+						done();
+					}, function( err ) {
+						console.log( "ERROR", err );
+					} );
 			} );
 
 			after( function() {
 				resetUserToken();
 				stamp.restore();
+				orgStore.restore();
 				mocker.reset();
 			} );
 
-			it( "should return the correct results", function( done ) {
-				request.then( function( orgs ) {
-					orgs.length.should.equal( 3 );
-					done();
-				} );
+			it( "should return the correct results", function() {
+				orgs.length.should.equal( 3 );
 			} );
 
-			it( "should save the etag and last modified information", function( done ) {
-				request.then( function() {
+			it( "should save the etag and last modified information", function() {
+				var args = stamp.getCall( 2 ).args;
+				args[ 0 ].should.eql( { orgs: "orglist" } );
+				args[ 1 ].should.eql( orgHeaders[ "Last-Modified" ] );
+				args[ 2 ].should.equal( orgHeaders[ "ETag" ] );
 
-					var args = stamp.getCall( 2 ).args;
-					args[ 0 ].should.eql( { orgs: "orglist" } );
-					args[ 1 ].should.eql( orgHeaders[ "Last-Modified" ] );
-					args[ 2 ].should.equal( orgHeaders[ "ETag" ] );
-
-					var args2 = stamp.getCall( 3 ).args;
-					args2[ 0 ].should.eql( { userInfo: userToken.user } );
-					args2[ 1 ].should.eql( userHeaders[ "Last-Modified" ] );
-					args2[ 2 ].should.equal( userHeaders[ "ETag" ] );
-					done();
-				} );
+				var args2 = stamp.getCall( 3 ).args;
+				args2[ 0 ].should.eql( { userInfo: userToken.user } );
+				args2[ 1 ].should.eql( userHeaders[ "Last-Modified" ] );
+				args2[ 2 ].should.equal( userHeaders[ "ETag" ] );
 			} );
 		} );
 
@@ -451,7 +467,8 @@ describe( "Github API Wrapper", function() {
 				"stamp": "Wed, 15 Nov 1998 04:58:08 GMT"
 			};
 
-			before( function() {
+			var orgs;
+			before( function( done ) {
 				setUserToken( userToken );
 
 				dbOrgs = sinon.stub( databass, "organizations" ).returns( when( [ 1, 2 ] ) );
@@ -471,7 +488,11 @@ describe( "Github API Wrapper", function() {
 					.matchHeader( "if-none-match", userHeaders.tag )
 					.reply( 304 );
 
-				request = api.fetchOrganizations();
+				api.fetchOrganizations()
+					.then( function( _orgs ) {
+						orgs = _orgs;
+						done();
+					} );
 			} );
 
 			after( function() {
@@ -482,22 +503,15 @@ describe( "Github API Wrapper", function() {
 				mocker.reset();
 			} );
 
-			it( "should return the correct results", function( done ) {
-				request.then( function( orgs ) {
-					orgs.length.should.equal( 3 );
-					done();
-				} );
+			it( "should return the correct results", function() {
+				orgs.length.should.equal( 3 );
 			} );
 
-			it( "should retrieve the information from the database", function( done ) {
-				request.then( function() {
+			it( "should retrieve the information from the database", function() {
+				dbOrgs.called.should.be.ok;
+				dbUser.called.should.be.ok;
 
-					dbOrgs.called.should.be.ok;
-					dbUser.called.should.be.ok;
-
-					stamp.callCount.should.equal( 2 );
-					done();
-				} );
+				stamp.callCount.should.equal( 2 );
 			} );
 		} );
 	} );
@@ -513,14 +527,19 @@ describe( "Github API Wrapper", function() {
 				"Last-Modified": "Wed, 15 Nov 1995 04:58:08 GMT"
 			};
 
-			before( function() {
+			var treeResult;
+			before( function( done ) {
 				setUserToken( userToken );
 				stamp = sinon.stub( databass, "stamp" );
 
 				mocker.github( "gitdata:get-tree", { user: userToken.user, repo: "octocat", sha: sha, recursive: true } )
 					.replyWithFixture( 200, "tree:octocat", responseHeaders );
 
-				request = api.fetchLatestTree( userToken.user, "octocat", sha );
+				api.fetchLatestTree( userToken.user, "octocat", sha )
+					.then( function( result ) {
+						treeResult = result;
+						done();
+					} );
 			} );
 
 			after( function() {
@@ -529,21 +548,15 @@ describe( "Github API Wrapper", function() {
 				mocker.reset();
 			} );
 
-			it( "should return the correct results", function( done ) {
-				request.then( function( tree ) {
-					tree.sha.should.equal( sha );
-					done();
-				} );
+			it( "should return the correct results", function() {
+				treeResult.sha.should.equal( sha );
 			} );
 
-			it( "should cache the results", function( done ) {
-				request.then( function( result ) {
-					var args = stamp.getCall( 0 ).args;
-					args[ 0 ].should.eql( { organization: userToken.user, treeRepository: "octocat", sha: sha } );
-					args[ 1 ].should.eql( responseHeaders[ "Last-Modified" ] );
-					args[ 2 ].should.eql( responseHeaders.ETag );
-					done();
-				} );
+			it( "should cache the results", function() {
+				var args = stamp.getCall( 0 ).args;
+				args[ 0 ].should.eql( { organization: userToken.user, treeRepository: "octocat", sha: sha } );
+				args[ 1 ].should.eql( responseHeaders[ "Last-Modified" ] );
+				args[ 2 ].should.eql( responseHeaders.ETag );
 			} );
 		} );
 
@@ -557,7 +570,8 @@ describe( "Github API Wrapper", function() {
 				"stamp": "Wed, 15 Nov 1995 04:58:08 GMT"
 			};
 
-			before( function() {
+			var treeResult;
+			before( function( done ) {
 				setUserToken( userToken );
 				stamp = sinon.stub( databass, "stamp" );
 
@@ -569,7 +583,11 @@ describe( "Github API Wrapper", function() {
 					.matchHeader( "if-none-match", stampHeaders.tag )
 					.reply( 304 );
 
-				request = api.fetchTreeChanges( userToken.user, "octocat", sha );
+				api.fetchTreeChanges( userToken.user, "octocat", sha )
+					.then( function( result ) {
+						treeResult = result;
+						done();
+					} );
 			} );
 
 			after( function() {
@@ -578,18 +596,12 @@ describe( "Github API Wrapper", function() {
 				mocker.reset();
 			} );
 
-			it( "should return the correct results", function( done ) {
-				request.then( function( tree ) {
-					should( tree ).not.be.ok;
-					done();
-				} );
+			it( "should return the correct results", function() {
+				should( treeResult ).not.be.ok;
 			} );
 
-			it( "should not cache the results", function( done ) {
-				request.then( function( result ) {
-					stamp.callCount.should.equal( 1 );
-					done();
-				} );
+			it( "should not cache the results", function() {
+				stamp.callCount.should.equal( 1 );
 			} );
 		} );
 	} );

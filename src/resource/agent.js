@@ -2,8 +2,6 @@ var _ = require( "lodash" );
 var request = require( "request" );
 var postal = require( "postal" );
 var channel = postal.channel( "agents" );
-var token = require( "../../src/github/token.js" );
-var ghtoken = token.read().token;
 var commits = postal.channel( "commits" );
 
 var api = {
@@ -38,11 +36,13 @@ function list( envelope ) {
 	return api.agentList;
 }
 
-function register( envelope ) {
+function register( envelope, github ) {
 	api.agentList[ envelope.data.name ] = envelope.data;
 	channel.publish( "registered", envelope.data );
 
-	return { data: { token: ghtoken } };
+	var creds = github.getCredentials();
+
+	return { data: { token: creds.token } };
 }
 
 module.exports = api;

@@ -34,7 +34,7 @@ function authenticateToken() {
 }
 
 function checkToken() {
-	return tokenApi.check();
+	return ( ghToken && ghUser ) || tokenApi.check();
 }
 
 function createHookFn( url ) {
@@ -315,9 +315,11 @@ function isUnchanged( data ) {
 }
 
 function readToken() {
-	var data = tokenApi.read();
-	ghUser = data.user;
-	ghToken = data.token;
+	if ( !ghUser || !ghToken ) {
+		var data = tokenApi.read();
+		ghUser = data.user;
+		ghToken = data.token;
+	}
 }
 
 function saveStampFor( key, response ) {
@@ -331,8 +333,26 @@ function saveStampFor( key, response ) {
 	}
 }
 
+function getCredentials() {
+	readToken();
+	return {
+		user: ghUser,
+		token: ghToken
+	};
+}
+
+function setCredentials( creds ) {
+	ghUser = creds.user;
+	ghToken = creds.token;
+}
+
 module.exports = function( _config ) {
 	var config = _config;
+
+	if ( config.nonstop.ghuser && config.nonstop.ghtoken ) {
+		ghUser = config.nonstop.ghuser;
+		ghToken = config.nonstop.ghtoken;
+	}
 
 	var nonstopCi = config.nonstop.ci;
 	var url = nonstopCi.url || "http://" + config.ngrok.subdomain + ".ngrok.com/api/commit";
@@ -354,7 +374,9 @@ module.exports = function( _config ) {
 		fetchLatestTree: fetchLatestTree,
 		fetchTreeChanges: fetchTreeChanges,
 		readToken: readToken,
-		writeToken: tokenApi.write
+		writeToken: tokenApi.write,
+		getCredentials: getCredentials,
+		setCredentials: setCredentials
 	};
 
 	return wrapper;
