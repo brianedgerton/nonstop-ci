@@ -130,7 +130,7 @@ module.exports = function( config, api, store, organization, repository ) {
 			"polling": {
 				_onEnter: function() {
 					if ( !this.hasHook ) {
-						setInterval( function() {
+						setTimeout( function() {
 							this.transition( "fetching-branches" );
 						}.bind( this ), 300000 );
 					}
