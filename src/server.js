@@ -2,6 +2,7 @@ var ngrok = require( 'ngrok' );
 var host = require( 'autohost' );
 var _ = require( 'lodash' );
 var authProvider = require( 'autohost-nedb-auth' )( {} );
+var debug = require( 'debug' )( 'nonstop:server' );
 var daedalus;
 var server;
 var config;
@@ -31,6 +32,7 @@ function start() {
 			if ( err ) {
 				console.log( err, url );
 			} else {
+				debug( "ngrok connected with url %s", url );
 				var githubFsm = require( './github/main.fsm.js' );
 			}
 		} );
