@@ -8,3 +8,4 @@ config.json
 data/
 coverage/
 api-token.json
+.vagrant/

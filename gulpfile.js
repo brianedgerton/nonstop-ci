@@ -30,10 +30,21 @@ gulp.task( "start", function() {
 		stdio: "inherit",
 		restart: true
 	} );
-	// bg.process( "server", {
-	// 	command: "node",
-	// 	args: [ "./src/index.js" ],
-	// 	stdio: "inherit",
-	// 	restart: true
-	// } );
+} );
+
+gulp.task( "docker:build", function() {
+	var spawn = require( "child_process" ).spawn;
+	var pkg = require( "./package.json" );
+
+	var version = pkg.version;
+	var name = pkg.docker.name || pkg.name;
+	var org = pkg.docker.org;
+
+	var tag = org + "/" + name + ":" + version;
+
+	var child = spawn( "docker", [ "build", "-t", tag, "." ], {
+		stdio: "inherit"
+	} );
+
+	return child;
 } );

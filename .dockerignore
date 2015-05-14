@@ -1,0 +1,14 @@
+.vagrant
+data
+coverage
+node_modules
+tmp
+spec
+.git
+Dockerfile
+.editorconfig
+.gitignore
+.jshintrc
+.npmignore
+Vagrantfile
+.DS_Store

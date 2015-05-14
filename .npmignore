@@ -5,3 +5,5 @@ github-token.js
 data/
 commit.json
 config.json
+.vagrant/
+.DS_Store

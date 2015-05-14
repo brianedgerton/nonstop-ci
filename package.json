@@ -7,6 +7,9 @@
     "test": "gulp test",
     "start": "gulp start"
   },
+  "docker": {
+    "org": "leankit-labs"
+  },
   "repository": {
     "type": "git",
     "url": "http://github.com/LeanKit-Labs/nonstop-ci"
