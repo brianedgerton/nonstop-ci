@@ -3,9 +3,8 @@ var handler = require( "../../src/resource/commit" );
 module.exports = function( host ) {
 	return {
 		name: "commit",
-		actions: [
-			{
-				alias: "new",
+		actions: {
+			new: {
 				method: "post",
 				topic: "new",
 				url: "/",
@@ -14,6 +13,6 @@ module.exports = function( host ) {
 					envelope.reply( response );
 				}
 			}
-		]
+		}
 	};
 };

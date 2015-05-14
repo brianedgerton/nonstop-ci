@@ -5,9 +5,8 @@ var store = require( "../../src/github/store.js" );
 module.exports = function( host ) {
 	return {
 		name: "github",
-		actions: [
-			{
-				alias: "list-org-repositories",
+		actions: {
+			"list-org-repositories": {
 				method: "get",
 				topic: "organization.repositories",
 				url: "organization/:org/repository",
@@ -31,8 +30,7 @@ module.exports = function( host ) {
 						} );
 				}
 			},
-			{
-				alias: "list-organizations",
+			"list-organizations": {
 				method: "get",
 				topic: "list.organizations",
 				url: "organization",
@@ -49,6 +47,6 @@ module.exports = function( host ) {
 						} );
 				}
 			}
-		]
+		}
 	};
 };

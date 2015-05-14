@@ -3,9 +3,8 @@ var handlers = require( "../../src/resource/agent.js" );
 module.exports = function( host, github ) {
 	return {
 		name: "agent",
-		actions: [
-			{
-				alias: "register",
+		actions: {
+			register: {
 				method: "post",
 				topic: "register",
 				url: "",
@@ -15,8 +14,7 @@ module.exports = function( host, github ) {
 					envelope.reply( response );
 				}
 			},
-			{
-				alias: "list",
+			list: {
 				method: "get",
 				topic: "list",
 				url: "",
@@ -24,6 +22,6 @@ module.exports = function( host, github ) {
 					envelope.reply( handlers.list( envelope ) );
 				}
 			}
-		]
+		}
 	};
 };
